@@ -4,15 +4,16 @@ import { products, users } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
 
+// Wajib untuk disable caching di Vercel
 export const dynamic = 'force-dynamic';
 
+// GET: Get product by ID
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
-    console.log(`Fetching product by ID (dynamic route): ${id}`);
 
     if (!id) {
       return NextResponse.json(
@@ -21,12 +22,10 @@ export async function GET(
       );
     }
 
-    // Query the product by ID, join with seller name and email
     const product = await db
       .select()
       .from(products)
       .where(eq(products.id, id))
-      // .innerJoin(users, eq(products.sellerId, users.id))
       .limit(1);
 
     if (product.length === 0) {
@@ -53,9 +52,10 @@ export async function GET(
   }
 }
 
+// PUT: Update product
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -63,9 +63,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = params;
-    const body = await request.json();
-    const { title, description, category, price, stock } = body;
+    const { id } = await params; // ✅ await params
 
     if (!id) {
       return NextResponse.json(
@@ -74,7 +72,10 @@ export async function PUT(
       );
     }
 
-    // Fetch the existing product to ensure it exists
+    const body = await request.json();
+    const { title, description, category, price, stock } = body;
+
+    // Cek apakah produk ada
     const existingProduct = await db
       .select()
       .from(products)
@@ -88,7 +89,7 @@ export async function PUT(
       );
     }
 
-    // Check if the logged-in user is the owner of the product
+    // Cek apakah user adalah pemilik produk
     if (existingProduct[0].sellerId !== session.user.id) {
       return NextResponse.json(
         { error: 'Anda tidak memiliki izin untuk mengedit produk ini.' },
@@ -96,8 +97,8 @@ export async function PUT(
       );
     }
 
-    // Update the product
-    const updatedProduct = await db
+    // Update produk
+    const [updatedProduct] = await db
       .update(products)
       .set({
         title,
@@ -112,7 +113,7 @@ export async function PUT(
 
     return NextResponse.json({
       message: 'Product updated successfully',
-      product: updatedProduct[0],
+      product: updatedProduct,
     });
   } catch (error) {
     console.error('Update product error:', error);
@@ -123,9 +124,10 @@ export async function PUT(
   }
 }
 
+// DELETE: Delete product
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -133,7 +135,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params; // ✅ await params
 
     if (!id) {
       return NextResponse.json(
@@ -142,7 +144,7 @@ export async function DELETE(
       );
     }
 
-    // Fetch the existing product to ensure it exists
+    // Cek apakah produk ada
     const existingProduct = await db
       .select()
       .from(products)
@@ -156,13 +158,11 @@ export async function DELETE(
       );
     }
 
-    // Delete the product
-    await db
-      .delete(products)
-      .where(eq(products.id, id));
+    // Hapus produk
+    await db.delete(products).where(eq(products.id, id));
 
     return NextResponse.json({
-      message: 'Product deleted successfully'
+      message: 'Product deleted successfully',
     });
   } catch (error) {
     console.error('Delete product error:', error);

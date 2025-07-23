@@ -3,31 +3,37 @@ import { db } from '@/lib/db';
 import { redeemableProducts } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 
-// GET a single redeemable product by ID
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+// Wajib untuk disable caching di Vercel
+export const dynamic = 'force-dynamic';
+
+// GET: Ambil produk redeemable berdasarkan ID
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const id = params.id;
-    
+    const { id } = await params; // ✅ await params
+
     if (!id) {
       return NextResponse.json(
         { error: 'ID produk wajib diisi' },
         { status: 400 }
       );
     }
-    
+
     const product = await db
       .select()
       .from(redeemableProducts)
       .where(eq(redeemableProducts.id, id))
       .limit(1);
-    
+
     if (product.length === 0) {
       return NextResponse.json(
         { error: 'Produk tidak ditemukan' },
         { status: 404 }
       );
     }
-    
+
     return NextResponse.json({
       product: product[0],
     });
@@ -40,32 +46,35 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-// UPDATE a redeemable product
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+// PATCH: Update produk redeemable
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const id = params.id;
-    
+    const { id } = await params; // ✅ await params
+
     if (!id) {
       return NextResponse.json(
         { error: 'ID produk wajib diisi' },
         { status: 400 }
       );
     }
-    
-    // Check if product exists
+
+    // Cek apakah produk ada
     const existingProduct = await db
       .select()
       .from(redeemableProducts)
       .where(eq(redeemableProducts.id, id))
       .limit(1);
-    
+
     if (existingProduct.length === 0) {
       return NextResponse.json(
         { error: 'Produk tidak ditemukan' },
         { status: 404 }
       );
     }
-    
+
     const {
       title,
       description,
@@ -76,32 +85,32 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       contentUrl,
       isActive,
     } = await request.json();
-    
-    // Validate required fields
-    if (!title || !description || !category || !pointsCost) {
+
+    // Validasi field wajib
+    if (!title || !description || !category || pointsCost === undefined) {
       return NextResponse.json(
         { error: 'Judul, deskripsi, kategori, dan biaya poin wajib diisi' },
         { status: 400 }
       );
     }
-    
-    // Validate pointsCost is a positive number
+
+    // Validasi pointsCost
     if (typeof pointsCost !== 'number' || pointsCost <= 0) {
       return NextResponse.json(
         { error: 'Biaya poin harus berupa angka positif' },
         { status: 400 }
       );
     }
-    
-    // Update the product
-    const updatedProduct = await db
+
+    // Update produk
+    const [updatedProduct] = await db
       .update(redeemableProducts)
       .set({
         title,
         description,
         category,
         pointsCost,
-        stock: stock || 0,
+        stock: stock ?? 0,
         thumbnailUrl,
         contentUrl,
         isActive: isActive !== undefined ? isActive : true,
@@ -109,10 +118,10 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       })
       .where(eq(redeemableProducts.id, id))
       .returning();
-    
+
     return NextResponse.json({
       message: 'Produk berhasil diperbarui',
-      product: updatedProduct[0],
+      product: updatedProduct,
     });
   } catch (error: any) {
     console.error('Update redeemable product error:', error);
@@ -123,37 +132,40 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   }
 }
 
-// DELETE a redeemable product
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+// DELETE: Hapus produk redeemable
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const id = params.id;
-    
+    const { id } = await params; // ✅ await params
+
     if (!id) {
       return NextResponse.json(
         { error: 'ID produk wajib diisi' },
         { status: 400 }
       );
     }
-    
-    // Check if product exists
+
+    // Cek apakah produk ada
     const existingProduct = await db
       .select()
       .from(redeemableProducts)
       .where(eq(redeemableProducts.id, id))
       .limit(1);
-    
+
     if (existingProduct.length === 0) {
       return NextResponse.json(
         { error: 'Produk tidak ditemukan' },
         { status: 404 }
       );
     }
-    
-    // Delete the product
+
+    // Hapus produk
     await db
       .delete(redeemableProducts)
       .where(eq(redeemableProducts.id, id));
-    
+
     return NextResponse.json({
       message: 'Produk berhasil dihapus',
     });

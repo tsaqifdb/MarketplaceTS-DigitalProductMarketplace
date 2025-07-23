@@ -17,6 +17,7 @@ export const users = pgTable('users', {
   gender: genderEnum('gender'),
   role: userRoleEnum('role').notNull().default('client'),
   isEmailVerified: boolean('is_email_verified').default(false),
+  emailVerificationToken: text('email_verification_token'),
   sellerPoints: integer('seller_points').default(0),
   curatorPoints: integer('curator_points').default(0),
   isCuratorApproved: boolean('is_curator_approved').default(false),

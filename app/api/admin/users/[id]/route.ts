@@ -7,7 +7,7 @@ import { eq } from 'drizzle-orm';
 // GET: Get user by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -17,12 +17,12 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    const userId = params.id;
-    if (!userId) {
+    const { id } = await params;
+    if (!id) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
-    const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+    const user = await db.select().from(users).where(eq(users.id, id)).limit(1);
     
     if (user.length === 0) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
@@ -40,7 +40,7 @@ export async function GET(
 // PATCH: Update user
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -50,8 +50,8 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    const userId = params.id;
-    if (!userId) {
+    const { id } = await params;
+    if (!id) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
@@ -59,7 +59,7 @@ export async function PATCH(
     const { name, email, role, sellerPoints, curatorPoints } = body;
 
     // Check if user exists
-    const existingUser = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+    const existingUser = await db.select().from(users).where(eq(users.id, id)).limit(1);
     
     if (existingUser.length === 0) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
@@ -77,7 +77,7 @@ export async function PATCH(
     // Update user
     const [updatedUser] = await db.update(users)
       .set(updateData)
-      .where(eq(users.id, userId))
+      .where(eq(users.id, id))
       .returning();
 
     return NextResponse.json({
@@ -93,7 +93,7 @@ export async function PATCH(
 // DELETE: Delete user
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -103,25 +103,25 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    const userId = params.id;
-    if (!userId) {
+    const { id } = await params;
+    if (!id) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
     // Check if user exists
-    const existingUser = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+    const existingUser = await db.select().from(users).where(eq(users.id, id)).limit(1);
     
     if (existingUser.length === 0) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     // Prevent deleting yourself
-    if (userId === session.user.id) {
+    if (id === session.user.id) {
       return NextResponse.json({ error: 'Cannot delete your own account' }, { status: 400 });
     }
 
     // Delete user
-    await db.delete(users).where(eq(users.id, userId));
+    await db.delete(users).where(eq(users.id, id));
 
     return NextResponse.json({
       message: 'User deleted successfully'
