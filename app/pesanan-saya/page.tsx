@@ -141,69 +141,71 @@ export default function MyOrdersPage() {
               </button>
             </div>
           ) : (
-            <div className="bg-white border border-gray-200 rounded-lg overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produk</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Seller</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Pembelian</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {orders.map((order, index) => (
-                    <tr key={order.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.product.title}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.product.category}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.seller.name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(order.createdAt).toLocaleDateString('id-ID')}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          order.paymentStatus === 'completed' ? 'bg-emerald-100 text-emerald-800' :
-                          order.paymentStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-red-100 text-red-800'
-                        }`}>
-                          {order.paymentStatus}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        {order.paymentStatus === 'completed' && order.product.contentUrl ? (
-                          <button
-                            onClick={() => handleDownload(order.product.contentUrl!)}
-                            className="text-emerald-600 hover:text-emerald-900 flex items-center"
-                          >
-                            <Download className="w-4 h-4 mr-1" />
-                            Link
-                          </button>
-                        ) : order.paymentStatus === 'pending' ? (
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => router.push(`/payment-gate?orderId=${order.transactionId}`)}
-                              className="text-emerald-600 hover:text-emerald-900 text-xs px-2 py-1 border border-emerald-600 rounded-md"
-                            >
-                              Bayar
-                            </button>
-                            <button
-                              onClick={() => handleCancelOrder(order.id)}
-                              className="text-red-600 hover:text-red-900 text-xs px-2 py-1 border border-red-600 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-                              disabled={cancellingOrderId === order.id}
-                            >
-                              {cancellingOrderId === order.id ? 'Membatalkan...' : 'Batalkan'}
-                            </button>
-                          </div>
-                        ) : (
-                          <span className="text-gray-400">N/A</span>
-                        )}
-                      </td>
+            <div className="bg-white border border-gray-200 rounded-lg">
+              <div className="overflow-x-auto w-full style={{ maxWidth: '100%' }}">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">No</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Produk</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Kategori</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Seller</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Tanggal Pembelian</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Status</th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Aksi</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {orders.map((order, index) => (
+                      <tr key={order.id}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{index + 1}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.product.title}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.product.category}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.seller.name}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(order.createdAt).toLocaleDateString('id-ID')}</td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                            order.paymentStatus === 'completed' ? 'bg-emerald-100 text-emerald-800' :
+                            order.paymentStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {order.paymentStatus}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          {order.paymentStatus === 'completed' && order.product.contentUrl ? (
+                            <button
+                              onClick={() => handleDownload(order.product.contentUrl!)}
+                              className="text-emerald-600 hover:text-emerald-900 flex items-center"
+                            >
+                              <Download className="w-4 h-4 mr-1" />
+                              Link
+                            </button>
+                          ) : order.paymentStatus === 'pending' ? (
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => router.push(`/payment-gate?orderId=${order.transactionId}`)}
+                                className="text-emerald-600 hover:text-emerald-900 text-xs px-2 py-1 border border-emerald-600 rounded-md"
+                              >
+                                Bayar
+                              </button>
+                              <button
+                                onClick={() => handleCancelOrder(order.id)}
+                                className="text-red-600 hover:text-red-900 text-xs px-2 py-1 border border-red-600 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={cancellingOrderId === order.id}
+                              >
+                                {cancellingOrderId === order.id ? 'Membatalkan...' : 'Batalkan'}
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">N/A</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>

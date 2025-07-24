@@ -212,7 +212,7 @@ export default function PenukarPoinPage() {
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900">Penukar Poin</h1>
-            <p className="text-gray-600 mt-2">Tukarkan poin keaktifan Anda dengan berbagai produk menarik</p>
+            <p className="text-gray-600 mt-2">Tukarkan Voucher Poin Anda dengan berbagai produk menarik</p>
           </div>
 
           {/* Points Card */}
@@ -224,7 +224,7 @@ export default function PenukarPoinPage() {
                 </svg>
               </div>
               <div className="ml-4">
-                <h3 className="text-lg font-semibold text-gray-700">Poin Keaktifan Anda</h3>
+                <h3 className="text-lg font-semibold text-gray-700">Voucher Poin Anda</h3>
                 {isLoadingPoints ? (
                   <div className="h-9 w-24 bg-emerald-100 animate-pulse rounded"></div>
                 ) : (

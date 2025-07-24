@@ -33,7 +33,7 @@ export default function Layout({
         onToggleSidebar={showSidebar ? toggleSidebar : undefined}
       />
       
-      <div className="flex flex-1 relative">
+      <div className="flex flex-1 relative" style={{ overflow: 'visible', maxWidth: '100%' }}>
         {showSidebar && isSidebarVisible && (
           <>
             <Sidebar userRole={getUserRole()} />
@@ -44,7 +44,7 @@ export default function Layout({
           </>
         )}
         
-        <main className="flex-1 max-w-7xl mx-auto">
+        <main className="flex-1 w-full max-w-7xl mx-auto">
           {children}
         </main>
       </div>

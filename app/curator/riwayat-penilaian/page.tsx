@@ -197,7 +197,7 @@ export default function RiwayatPenilaianPage() {
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-700">Total Poin Keaktifan</p>
+                    <p className="text-sm font-medium text-gray-700">Total Voucher Poin</p>
                     <p className="text-xl font-bold text-blue-600">
                       {isLoadingPoints ? (
                         <span className="inline-block w-12 h-6 bg-blue-100 animate-pulse rounded"></span>

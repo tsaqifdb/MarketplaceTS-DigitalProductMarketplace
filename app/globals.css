@@ -5,9 +5,17 @@
   --foreground: #059669;
 }
 
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-poppins), 'Poppins', ui-sans-serif, system-ui, sans-serif;
+}
+
+.table-responsive {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.table-responsive table {
+  min-width: 800px; /* Atau ukuran minimum yang sesuai */
 }
