@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from 'react';
 import Link from 'next/link';
 import { Upload, FileText, Image, Video, Music, Archive } from 'lucide-react';
@@ -32,9 +31,10 @@ export default function DaftarkanProdukPage() {
     tags: '',
     requirements: ''
   });
-
   const [dragOver, setDragOver] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // State untuk pesan error file
+  const [fileErrors, setFileErrors] = useState<{file?: string | null, thumbnail?: string | null}>({});
 
   const categories = [
     { value: 'ebook', label: 'E-book' },
@@ -48,6 +48,28 @@ export default function DaftarkanProdukPage() {
     e.preventDefault();
     setIsSubmitting(true);
     
+    // Validasi ukuran file sebelum submit
+    const maxSizeFile = 100 * 1024 * 1024; // 100MB
+    const maxSizeThumbnail = 5 * 1024 * 1024; // 5MB
+    let hasError = false;
+    const errors: {file?: string | null, thumbnail?: string | null} = {};
+
+    if (formData.file && formData.file.size > maxSizeFile) {
+      errors.file = `Ukuran file terlalu besar. Maksimal ${maxSizeFile / (1024 * 1024)} MB.`;
+      hasError = true;
+    }
+    
+    if (formData.thumbnail && formData.thumbnail.size > maxSizeThumbnail) {
+      errors.thumbnail = `Ukuran thumbnail terlalu besar. Maksimal ${maxSizeThumbnail / (1024 * 1024)} MB.`;
+      hasError = true;
+    }
+
+    if (hasError) {
+      setFileErrors(errors);
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       // Create FormData for file upload
       const submitData = new FormData();
@@ -58,36 +80,29 @@ export default function DaftarkanProdukPage() {
       submitData.append('stock', formData.stock);
       submitData.append('tags', formData.tags);
       submitData.append('requirements', formData.requirements);
-      
       // Add seller ID (required field for the API)
       if (user?.id) {
         submitData.append('sellerId', user.id);
       } else {
         throw new Error('User ID not found');
       }
-      
       if (formData.file) {
         submitData.append('content', formData.file);
       }
       if (formData.thumbnail) {
         submitData.append('thumbnail', formData.thumbnail);
       }
-
       // Submit to API
       const response = await fetch('/api/produk', {
         method: 'POST',
         body: submitData,
       });
-      
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Gagal mengirim produk');
       }
-      
       const result = await response.json();
-      
       alert('Produk berhasil diajukan untuk review!');
-      
       // Reset form
       setFormData({
         name: '',
@@ -100,10 +115,8 @@ export default function DaftarkanProdukPage() {
         tags: '',
         requirements: ''
       });
-
       // Redirect to history pengajuan
       window.location.href = '/seller/produk/galeri';
-      
     } catch (error) {
       console.error('Error submitting product:', error);
       alert(`Terjadi kesalahan: ${error instanceof Error ? error.message : 'Silakan coba lagi.'}`);
@@ -120,16 +133,70 @@ export default function DaftarkanProdukPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name } = e.target;
     const file = e.target.files?.[0] || null;
+    
+    // Validasi ukuran file saat pengguna memilih file
+    if (file) {
+      let maxSize;
+      let fieldName;
+      
+      if (name === 'file') {
+        maxSize = 100 * 1024 * 1024; // 100MB
+        fieldName = 'File Produk';
+      } else if (name === 'thumbnail') {
+        maxSize = 5 * 1024 * 1024; // 5MB
+        fieldName = 'Thumbnail';
+      }
+      
+      if (maxSize && file.size > maxSize) {
+        alert(`${fieldName} terlalu besar. Maksimal ${maxSize / (1024 * 1024)} MB.`);
+        // Reset input file
+        e.target.value = '';
+        return;
+      }
+      
+      // Hapus error jika file valid
+      if (name === 'file') {
+        setFileErrors(prev => ({ ...prev, file: null }));
+      } else if (name === 'thumbnail') {
+        setFileErrors(prev => ({ ...prev, thumbnail: null }));
+      }
+    }
+    
     setFormData(prev => ({ ...prev, [name]: file }));
   };
 
   const handleDrop = (e: React.DragEvent, fieldName: 'file' | 'thumbnail') => {
     e.preventDefault();
     setDragOver(false);
-    
     const files = e.dataTransfer.files;
     if (files.length > 0) {
-      setFormData(prev => ({ ...prev, [fieldName]: files[0] }));
+      const file = files[0];
+      
+      // Validasi ukuran file saat drag & drop
+      let maxSize;
+      let fieldNameDisplay;
+      
+      if (fieldName === 'file') {
+        maxSize = 100 * 1024 * 1024; // 100MB
+        fieldNameDisplay = 'File Produk';
+      } else if (fieldName === 'thumbnail') {
+        maxSize = 5 * 1024 * 1024; // 5MB
+        fieldNameDisplay = 'Thumbnail';
+      }
+      
+      if (maxSize && file.size > maxSize) {
+        alert(`${fieldNameDisplay} terlalu besar. Maksimal ${maxSize / (1024 * 1024)} MB.`);
+        return;
+      }
+      
+      // Hapus error jika file valid
+      if (fieldName === 'file') {
+        setFileErrors(prev => ({ ...prev, file: null }));
+      } else if (fieldName === 'thumbnail') {
+        setFileErrors(prev => ({ ...prev, thumbnail: null }));
+      }
+      
+      setFormData(prev => ({ ...prev, [fieldName]: file }));
     }
   };
 
@@ -176,15 +243,12 @@ export default function DaftarkanProdukPage() {
               Kembali ke Galeri Produk
             </Link>
           </div>
-
           <div className="max-w-4xl mx-auto">
             <h1 className="text-2xl font-bold text-emerald-800 mb-8">Daftarkan Produk Digital</h1>
-            
             <form onSubmit={handleSubmit} className="space-y-8">
               {/* Basic Information */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-6">Informasi Dasar</h2>
-                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
@@ -201,7 +265,6 @@ export default function DaftarkanProdukPage() {
                       required
                     />
                   </div>
-
                   <div>
                     <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
                       Kategori *
@@ -220,7 +283,6 @@ export default function DaftarkanProdukPage() {
                       ))}
                     </select>
                   </div>
-
                   <div>
                     <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-2">
                       Harga (Rp) *
@@ -237,7 +299,6 @@ export default function DaftarkanProdukPage() {
                       required
                     />
                   </div>
-                  
                   <div>
                     <label htmlFor="stock" className="block text-sm font-medium text-gray-700 mb-2">
                       Jumlah Stok *
@@ -254,7 +315,6 @@ export default function DaftarkanProdukPage() {
                       required
                     />
                   </div>
-
                   <div>
                     <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-2">
                       Tags
@@ -270,7 +330,6 @@ export default function DaftarkanProdukPage() {
                     />
                   </div>
                 </div>
-
                 <div className="mt-6">
                   <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
                     Deskripsi Produk *
@@ -286,7 +345,6 @@ export default function DaftarkanProdukPage() {
                     required
                   />
                 </div>
-
                 <div className="mt-6">
                   <label htmlFor="requirements" className="block text-sm font-medium text-gray-700 mb-2">
                     Persyaratan Sistem/Penggunaan
@@ -302,11 +360,9 @@ export default function DaftarkanProdukPage() {
                   />
                 </div>
               </div>
-
               {/* File Uploads */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-6">Upload File</h2>
-                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Main Product File */}
                   <div>
@@ -361,8 +417,11 @@ export default function DaftarkanProdukPage() {
                         </div>
                       )}
                     </div>
+                    {/* Pesan error untuk file utama */}
+                    {fileErrors.file && (
+                      <p className="mt-2 text-sm text-red-600">{fileErrors.file}</p>
+                    )}
                   </div>
-
                   {/* Thumbnail */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -413,10 +472,13 @@ export default function DaftarkanProdukPage() {
                         </div>
                       )}
                     </div>
+                    {/* Pesan error untuk thumbnail */}
+                    {fileErrors.thumbnail && (
+                      <p className="mt-2 text-sm text-red-600">{fileErrors.thumbnail}</p>
+                    )}
                   </div>
                 </div>
               </div>
-
               {/* Submit Button */}
               <div className="flex justify-end space-x-4">
                 <Link href="/seller/produk/galeri">
